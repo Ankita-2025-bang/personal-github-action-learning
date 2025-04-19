@@ -1,20 +1,23 @@
-name: Node.js CI
+name: Node.js CI + Auto PR
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches-ignore:
+      - main  # Ignore direct pushes to main
+    
+permissions:
+  contents: write      # 👈 allows push, commit, branch creation
+  pull-requests: write # 👈 allows creating PRs
 
 jobs:
-  build:
+  build-and-pr:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
@@ -24,3 +27,13 @@ jobs:
 
       - name: Run the app
         run: npm start
+
+      - name: Create Pull Request to main
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.ANKITA_FIRST_SECRET }}
+          branch: ${{ github.ref_name }}
+          base: main
+          title: 'Automated PR from ${{ github.ref_name }}'
+          body: 'This pull request was automatically created by a GitHub Actions workflow.'
+          draft: true
